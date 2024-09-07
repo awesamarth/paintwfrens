@@ -38,6 +38,7 @@ const page: FC<pageProps> = ({}) => {
   // const [timerValue, setTimerValue] = useState(90);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<any>();
   const [playerPosition, setPlayerPosition] = useState<string>("TL");
+  const [timerValue, setTimerValue] = useState(20)
 
   const NUM_PLAYERS = 4;
 
@@ -100,23 +101,66 @@ const page: FC<pageProps> = ({}) => {
 
     const timer = (data: any) => {
       console.log(data);
-      // setTimerValue(data);
+      setTimerValue(data);
     };
-
+    const finalRender = async (data: string[]): Promise<void> => {
+      console.log("final render data", data);
+    
+      if (data.length !== 4) {
+        console.error("Expected 4 image URLs, got", data.length);
+        return;
+      }
+    
+      try {
+        const [img1, img2, img3, img4] = await Promise.all(
+          data.map(src => loadImage(src))
+        );
+    
+        const canvas = document.createElement('canvas');
+        const maxWidth = Math.max(img1.width + img2.width, img3.width + img4.width);
+        const maxHeight = Math.max(img1.height + img3.height, img2.height + img4.height);
+        canvas.width = maxWidth;
+        canvas.height = maxHeight;
+    
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          throw new Error("Unable to get 2D context");
+        }
+    
+        // Draw images in a 2x2 grid
+        ctx.drawImage(img1, 0, 0);
+        ctx.drawImage(img2, img1.width, 0);
+        ctx.drawImage(img3, 0, img1.height);
+        ctx.drawImage(img4, img1.width, img1.height);
+    
+        setImagePreviewUrl(canvas.toDataURL());
+      } catch (error) {
+        console.error("Error rendering images:", error);
+        // Handle error (e.g., set an error state or display a message to the user)
+      }
+    };
+    
+    // Helper function to load an image (unchanged)
+    const loadImage = (src: string): Promise<HTMLImageElement> => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    };
     const endGame = (data: any) => {
       console.log(data);
       setRoomData(data);
       const canvas =
-        canvasRefs[playerPosition as keyof typeof canvasRefs].canvasRef.current;
-      if (canvas) {
-        setImagePreviewUrl(canvas.toDataURL());
-        socket.emit("end-result", {
-          state: canvas.toDataURL(),
-          roomId,
-          playerPosition
-        });
-      }
-    };
+      canvasRefs[playerPosition as keyof typeof canvasRefs].canvasRef
+        .current;
+      if (!canvas?.toDataURL()) return console.log("returned here");
+      //  setImagePreviewUrl(canvasRef.current.toDataURL())
+        console.log(canvas.toDataURL())
+        socket.emit("end-result", ({state:canvas.toDataURL(), roomId}))
+    
+      };
 
     socket.on("get-canvas-state", () => {
       if (
@@ -183,6 +227,7 @@ const page: FC<pageProps> = ({}) => {
     socket.on("counting-down", countdown);
     socket.on("timer-running", timer);
     socket.on("end-game", endGame);
+    socket.on("final-render", finalRender)
     socket.on("assign-position", (position: string) => {
       setPlayerPosition(position);
     });
@@ -486,7 +531,7 @@ const page: FC<pageProps> = ({}) => {
           <div className="border-2 h-screen w-full justify-center items-center flex flex-col">
             <div></div>
             <div className="text-3xl">Game ended</div>
-            <img src={imagePreviewUrl} />
+            <img src={imagePreviewUrl} className="h-[30rem] w-[30rem]  object-contain" />
           </div>
         ) : (
           ""

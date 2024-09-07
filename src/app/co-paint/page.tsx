@@ -268,6 +268,8 @@ const page: FC<pageProps> = ({}) => {
                   <div></div>
                   <div className="text-3xl">Game ended</div>
                   <img src={imagePreviewUrl} />
+                  
+
 
         
                 </div>)
