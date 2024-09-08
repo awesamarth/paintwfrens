@@ -342,3 +342,17 @@ export const ABI=[
 
 export const LOCAL_CONTRACT_ADDRESS="0x5fbdb2315678afecb367f032d93f642f64180aa3"
 export const MORPH_HOLESKY_CONTRACT_ADDRESS="0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
+
+
+export const chainConfig = {
+  chainNamespace: CHAIN_NAMESPACES.EIP155,
+  chainId: "0xafa",
+  rpcTarget: "https://rpc-quicknode-holesky.morphl2.io",
+  // Avoid using public rpcTarget in production.
+  // Use services like Infura, Quicknode etc
+  displayName: "Morph Holesky Testnet",
+  blockExplorerUrl: "https://explorer-holesky.morphl2.io/",
+  ticker: "ETH",
+  tickerName: "Ethereum",
+  // logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+};

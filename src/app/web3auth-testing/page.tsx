@@ -37,6 +37,7 @@ import { useEffect, useState } from "react";
 import { core, Web3 } from "web3";
 import { Account, createPublicClient, createWalletClient, custom, http, parseEther } from "viem";
 import { mainnet, morphHolesky } from "viem/chains";
+import { chainConfig } from "@/constants";
 
 // IMP START - SDK Initialization
 // IMP START - Dashboard Registration
@@ -48,18 +49,7 @@ const web3AuthClientId =
 // IMP START - Verifier Creation
 const verifier = "w3a-firebase-demo";
 // IMP END - Verifier Creation
-export const chainConfig = {
-  chainNamespace: CHAIN_NAMESPACES.EIP155,
-  chainId: "0xafa",
-  rpcTarget: "https://rpc-quicknode-holesky.morphl2.io",
-  // Avoid using public rpcTarget in production.
-  // Use services like Infura, Quicknode etc
-  displayName: "Morph Holesky Testnet",
-  blockExplorerUrl: "https://explorer-holesky.morphl2.io/",
-  ticker: "ETH",
-  tickerName: "Ethereum",
-  // logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
-};
+
 
 let coreKitInstance: Web3AuthMPCCoreKit;
 let evmProvider: EthereumSigningProvider;
