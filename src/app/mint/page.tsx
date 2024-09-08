@@ -35,7 +35,7 @@ import {
   parseEther,
 } from "viem";
 import { mainnet, morphHolesky } from "viem/chains";
-import { chainConfig } from "../web3auth-testing/page";
+import { chainConfig } from "@/constants";
 
 let evmProvider;
 let publicClient: any;

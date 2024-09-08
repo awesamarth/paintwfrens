@@ -1,3 +1,5 @@
+import { CHAIN_NAMESPACES } from "@web3auth/base";
+
 export const ABI=[
     { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
     {

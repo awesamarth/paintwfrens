@@ -5,7 +5,6 @@ import { BN } from "bn.js";
 
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
-import { CHAIN_NAMESPACES } from "@web3auth/base";
 import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
 import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider";
 // IMP START - Quick Start
