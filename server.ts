@@ -3,6 +3,11 @@ dotenv.config();
 import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
+import { privateKeyToAccount, privateKeyToAddress } from "viem/accounts";
+import { SignProtocolClient, SpMode, EvmChains } from "@ethsign/sp-sdk";
+import {PinataSDK} from "pinata"
+import { socket } from "@/socket";
+
 
 // Define the type for room data
 interface RoomData {
@@ -11,6 +16,7 @@ interface RoomData {
   finalImages: string[];
   voteStarter: string;
   voteCount: number;
+  combinedImage: string;
 }
 
 const dev = process.env.NODE_ENV !== "production";
@@ -41,6 +47,39 @@ app.prepare().then(() => {
     lineWidth: number;
   };
 
+  const pinata = new PinataSDK({
+    pinataJwt: process.env.PINATA_JWT!,
+    pinataGateway: "chocolate-random-ant-763.mypinata.cloud",
+  });
+  
+
+  async function createAttestation(addresses:any[]) {
+    const privateKey = process.env.PRIVATE_KEY
+    
+    const client = new SignProtocolClient(SpMode.OnChain, {
+      chain: EvmChains.sepolia,
+      account: privateKeyToAccount(privateKey as `0x${string}`), // Optional, depending on environment
+    });
+    const signer:string = privateKeyToAddress(privateKey as `0x${string}`).toLowerCase() 
+    console.log(signer)
+    console.log("reaching here");
+
+    console.log("addresses are: ", addresses)
+    
+    
+    
+    const res = await client.createAttestation({
+      schemaId: "0x1cb",
+      data: {
+        addresses: addresses,
+        signer
+      },
+      indexingValue: signer.toLowerCase(),
+    });
+
+    
+    console.log(res);
+  }
   function startInitialCountdown(roomId: string) {
     let count = 2;
     const countdownInterval = setInterval(() => {
@@ -58,12 +97,12 @@ app.prepare().then(() => {
   }
 
   function startGameCountdown(roomId: string) {
-    let count = 19;
+    let count = 9;
     const countdownInterval = setInterval(() => {
       if (count > 0) {
         io.to(roomId).emit("timer-running", count);
         if (allRoomsMap[roomId].playersArray.length == 2) {
-          if (count === 10) {
+          if (count === 5) {
             io.in(roomId).emit("swap-canvases");
           }
         }
@@ -105,6 +144,7 @@ app.prepare().then(() => {
             finalImages: [],
             voteStarter: "",
             voteCount: 0,
+            combinedImage: "",
           };
         }
         roomData.playersArray.push(userId);
@@ -113,15 +153,12 @@ app.prepare().then(() => {
         const positions = ["TL", "TR", "BL", "BR"];
         const playerPosition = positions[roomData.playersArray.length - 1];
         socket.emit("assign-position", playerPosition);
-        console.log(roomData);
-        console.log("allrooms: ", allRoomsMap);
         io.in(roomId).emit("player-joined", roomData);
 
         clientsInRoom = io.sockets.adapter.rooms.get(roomId)?.size || 0;
         if (clientsInRoom == numberOfPlayers) {
           allRoomsMap[roomId].gameStatus = "counting-down";
           io.in(roomId).emit("start-countdown", allRoomsMap[roomId]);
-          console.log("room data is: ", roomData);
           startInitialCountdown(roomId);
         }
       }
@@ -157,23 +194,61 @@ app.prepare().then(() => {
       allRoomsMap[roomId].voteStarter === ""
         ? (allRoomsMap[roomId].voteStarter = playerId)
         : "";
+      console.log("vote start: ");
+      console.log(allRoomsMap[roomId].voteCount);
 
       io.to(roomId).emit("voting", allRoomsMap[roomId]);
     });
 
-    socket.on("vote-receive", ({ playerId, vote, roomId }) => {
+    socket.on("combined-image", ({ combinedImage, roomId }) => {
+      // console.log("combined image is: ", combinedImage)
+      console.log("room id is: ", roomId);
+
+      allRoomsMap[roomId].combinedImage = combinedImage;
+    });
+
+
+    socket.on("create-metadata", async({roomId, idOfToken})=>{
+      
+      
+      const upload = await pinata.upload.json({
+        id: idOfToken,
+        name: "Bob Smith",
+        email: "bob.smith@example.com",
+        age: 34,
+        isActive: false,
+        roles: ["user"]
+    })
+      
+    })
+    socket.on("vote-receive", async({ playerId, vote, roomId }) => {
       if (vote == false) {
-        io.to(roomId).emit("vote-declined", { playerId });
+        console.log("vote was declined");
+        console.log(allRoomsMap[roomId].voteCount);
+        io.to(roomId).emit("vote-result", {
+          roomDataResult: allRoomsMap[roomId],
+          vote: "declined",
+        });
       }
       if (vote == true) {
         console.log("hello there");
-        allRoomsMap[roomId].voteCount++
-        console.log(allRoomsMap[roomId].voteCount)
+        allRoomsMap[roomId].voteCount++;
+
+        console.log(allRoomsMap[roomId].voteCount);
         if (
           allRoomsMap[roomId].voteCount ===
           allRoomsMap[roomId].playersArray.length
         ) {
-          io.to(roomId).emit("vote-accepted", allRoomsMap[roomId].voteStarter);
+          console.log("vote was accepted");
+          io.to(roomId).emit("vote-result", {
+            roomDataResult: allRoomsMap[roomId],
+            vote: "accepted",
+          });
+
+          // to start here tomorrow
+            // await createAttestation(allRoomsMap[roomId].playersArray)
+            io.to(roomId).emit("create-nft", allRoomsMap[roomId])
+          ////
         }
       }
     });

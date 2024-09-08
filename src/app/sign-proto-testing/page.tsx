@@ -5,6 +5,7 @@ import axios from "axios";
 import { decodeAbiParameters } from "viem";
 import { useAccount } from "wagmi";
 
+
 /*
 
 {
@@ -36,8 +37,7 @@ export default function Testing() {
       // connects to MetaMask
       //@ts-ignore
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-      address=accounts[0]
-      console.log(address)
+
     } else {
       // tell the user to install an `ethereum` provider extension
     }
@@ -57,16 +57,16 @@ export default function Testing() {
   }
 
   async function createAttestation(
-    message: string,
     signer: string
   ) {
     console.log("reaching here");
     console.log(client);
+    console.log(address)
     const res = await client.createAttestation({
-      schemaId: "0x138",
+      schemaId: "0x1cb",
       data: {
-        message,
-        signer,
+        addresses:["ok", "does this work"],
+        signer:address,
       },
       indexingValue: signer.toLowerCase(),
     });
@@ -95,7 +95,7 @@ export default function Testing() {
       method: "GET",
       params: {
         mode: "onchain", // Data storage location
-        schemaId: "onchain_evm_11155111_0x138", // Your full schema's ID
+        schemaId: "onchain_evm_11155111_0x1cb", // Your full schema's ID
         attester: "0xCDF770392F1E5E61725Cc9522c80070134D50eC7", // Alice's address
         indexingValue:
           "0xCDF770392F1E5E61725Cc9522c80070134D50eC7".toLowerCase(), // Bob's address
@@ -196,7 +196,7 @@ export default function Testing() {
         onClick={() =>
           createAttestation(
             "i am signing",
-            address
+            
           )
         }
       >

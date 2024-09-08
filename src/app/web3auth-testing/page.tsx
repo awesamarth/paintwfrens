@@ -48,7 +48,7 @@ const web3AuthClientId =
 // IMP START - Verifier Creation
 const verifier = "w3a-firebase-demo";
 // IMP END - Verifier Creation
-const chainConfig = {
+export const chainConfig = {
   chainNamespace: CHAIN_NAMESPACES.EIP155,
   chainId: "0xafa",
   rpcTarget: "https://rpc-quicknode-holesky.morphl2.io",
@@ -103,18 +103,21 @@ function App(this: any) {
   const [mnemonicFactor, setMnemonicFactor] = useState<string>("");
   console.log(this)
   
-  
-  const publicClient = createPublicClient({
-    chain: morphHolesky, // for mainnet
-    transport: custom(evmProvider),
-  });
-  
-  const walletClient = createWalletClient({
-    chain: morphHolesky,
-    transport: custom(evmProvider),
-  });
+  let publicClient;
+  let walletClient:any;
+
+
 
   async function sendTransaction() {
+    publicClient = createPublicClient({
+      chain: morphHolesky, // for mainnet
+      transport: custom(evmProvider),
+    });
+    
+     walletClient = createWalletClient({
+      chain: morphHolesky,
+      transport: custom(evmProvider),
+    });
     const destination = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
     const amount = parseEther("0.0001");
 

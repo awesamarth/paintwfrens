@@ -2,14 +2,40 @@
 
 import { FC, useEffect, useState } from "react";
 import { useDraw } from "@/hooks/useDraw";
-import { ChromePicker } from "react-color";
 import { socket } from "@/socket";
-import { io } from "socket.io-client";
 import { drawLine } from "@/utils/drawLine";
 import { createBrushCursor } from "@/utils/cursor";
 import { HexColorPicker } from "react-colorful";
 import Navbar from "@/components/Navbar";
 import { default as NextImage } from "next/image";
+import { useWalletContext } from "@/contexts/WalletContext";
+import {ABI, MORPH_HOLESKY_CONTRACT_ADDRESS} from "@/constants"
+
+import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider";
+
+import {
+  COREKIT_STATUS,
+  generateFactorKey,
+  JWTLoginParams,
+  keyToMnemonic,
+  makeEthereumSigner,
+  mnemonicToKey,
+  parseToken,
+  TssShareType,
+  WEB3AUTH_NETWORK,
+  Web3AuthMPCCoreKit,
+} from "@web3auth/mpc-core-kit";
+
+import {
+  Account,
+  createPublicClient,
+  createWalletClient,
+  custom,
+  http,
+  parseEther,
+} from "viem";
+import { mainnet, morphHolesky } from "viem/chains";
+import { chainConfig } from "../web3auth-testing/page";
 
 interface pageProps {}
 
@@ -24,6 +50,9 @@ enum Tool {
   Eraser = "eraser",
   FillBucket = "fillBucket",
 }
+let evmProvider;
+let publicClient:any;
+let walletClient:any;
 
 const page: FC<pageProps> = ({}) => {
   const [color, setColor] = useState<string>("#000");
@@ -33,12 +62,59 @@ const page: FC<pageProps> = ({}) => {
   const [cursor, setCursor] = useState<string>("crosshair");
   const [roomJoined, setRoomJoined] = useState(false);
   const [roomId, setRoomId] = useState<string>("");
-  const [userId, setUserId] = useState("");
+  const [userId, setUserId] = useState<any>("");
   const [roomData, setRoomData] = useState({} as any);
   const [startingCounter, setStartingCounter] = useState<number | undefined>(3);
   const [timerValue, setTimerValue] = useState(90);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<any>();
   const [voted, setVoted] = useState(false);
+  const [result, setResult] = useState("arbitrary")
+  const [tokenId, setTokenId] = useState<number | undefined>()
+
+  const { coreKitStatus, login, logout, coreKitInstance } = useWalletContext();
+
+  const getWallet = async () => {
+    if (coreKitInstance && coreKitStatus === COREKIT_STATUS.LOGGED_IN) {
+      try {
+        evmProvider = new EthereumSigningProvider({ config: { chainConfig } });
+        evmProvider.setupProvider(makeEthereumSigner(coreKitInstance));
+        const user = coreKitInstance.getUserInfo();
+        console.log("User Info:", user);
+
+        publicClient = createPublicClient({
+          chain: morphHolesky, 
+          transport: custom(evmProvider),
+        });
+
+        walletClient = createWalletClient({
+          chain: morphHolesky,
+          transport: custom(evmProvider),
+        });
+
+
+        const addresses = await walletClient.getAddresses();
+        if (addresses) {
+          setUserId(addresses[0]);
+        }
+        console.log(addresses[0]);
+      } catch (error) {
+        console.error("Failed to get user info:", error);
+      }
+    } else {
+    }
+  };
+
+  useEffect(()=>{
+    console.log("result changed to: ")
+    console.log(result) 
+  },[result])   
+
+  useEffect(() => {
+    if (coreKitStatus === COREKIT_STATUS.LOGGED_IN) {
+      getWallet();
+    } else {
+    }
+  }, [coreKitStatus, coreKitInstance]);
 
   const NUM_PLAYERS = 2;
 
@@ -83,7 +159,9 @@ const page: FC<pageProps> = ({}) => {
 
     const voting = (data: any) => {
       setRoomData(data);
+      
       if (userId === data.voteStarter) {
+        console.log(userId)
         socket.emit("vote-receive", { playerId: userId, vote: true, roomId });
         setVoted(true);
       }
@@ -113,8 +191,12 @@ const page: FC<pageProps> = ({}) => {
 
         ctx.drawImage(img1, 0, 0);
         ctx.drawImage(img2, img1.width, 0);
-
-        setImagePreviewUrl(canvas.toDataURL());
+        let combinedImage = canvas.toDataURL()
+        setImagePreviewUrl(combinedImage)
+        console.log("room id here is: ", roomId)
+        if(roomId&&combinedImage){
+          socket.emit("combined-image", {combinedImage, roomId})
+        }
       } catch (error) {
         console.error("Error rendering images:", error);
         // Handle error (e.g., set an error state or display a message to the user)
@@ -141,6 +223,50 @@ const page: FC<pageProps> = ({}) => {
         roomId,
       });
     };
+
+    const voteResult = (data:any)=>{
+      console.log(data)
+      setResult(data.vote)
+    }
+
+    const createNft  = async(data:any)=>{
+      console.log("creating an nft")
+      console.log(data)
+
+      //@ts-ignore
+      if(data.voteStarter===userId){
+        console.log("user id is: ", userId)
+        const hash = await walletClient.writeContract({
+          account:userId as `0x${string}`,
+          address: MORPH_HOLESKY_CONTRACT_ADDRESS,
+          abi:ABI,
+          functionName:"createNFT",
+          args:[data.playersArray]
+        })
+
+        console.log(hash)
+        //@ts-ignore
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  
+        console.log(receipt)
+
+        const idOfToken = await publicClient.readContract({
+          address:MORPH_HOLESKY_CONTRACT_ADDRESS,
+          abi: ABI,
+          functionName:"idCounter"
+        })
+
+        console.log("reached id of token")
+        console.log(Number(idOfToken))
+        setTokenId(Number(idOfToken))
+
+        socket.emit("create-metadata", {roomId, idOfToken:Number(idOfToken)})
+
+      }
+
+
+      
+    }
 
     socket.on("get-canvas-state", () => {
       if (!canvasRef.current?.toDataURL()) return;
@@ -200,7 +326,8 @@ const page: FC<pageProps> = ({}) => {
     socket.on("end-game", endGame);
     socket.on("final-render", finalRender);
     socket.on("voting", voting);
-
+    socket.on("vote-result", voteResult)
+    socket.on("create-nft", createNft)
     socket.on("clear", clear);
 
     return () => {
@@ -217,6 +344,9 @@ const page: FC<pageProps> = ({}) => {
       socket.off("received-swap-canvas");
       socket.off("swap-canvases");
       socket.off("voting");
+      socket.off("vote-result")
+      socket.off("create-nft")
+      socket.off("create-metadata")
     };
   }, [canvasRef, roomJoined, roomData]);
 
@@ -352,39 +482,46 @@ const page: FC<pageProps> = ({}) => {
               className="w-[30rem] h-[30rem] object-contain"
               src={imagePreviewUrl}
             />
-            {roomData.voteStarter ? (
+            {tokenId?
+            (<div>
+              Congratulations! Your NFT has been created successfully! <br />
+              Your token ID is {tokenId}. Copy it, follow this link and mint it!<br/>
+              <a href="/mint">NFT Minting page</a>
+            </div>):
+            roomData.voteStarter ? (
               <div>
                 <div>voting in progress</div>
-                {voted ? (
+                {result==="declined"?
+                (<div>Vote declined. Too bad!</div>): 
+                result==="accepted"?
+                (<div>Creating NFT</div>):
+                
+                voted ? (
                   <div>Waiting for others...</div>
                 ) : (
                   <div>
                     <button
-                      onClick={() =>
-                      {
+                      onClick={() => {
                         socket.emit("vote-receive", {
                           playerId: userId,
                           vote: true,
                           roomId,
-                        })
-                        setVoted(true)
-                      }
-                      }
+                        });
+                        setVoted(true);
+                      }}
                     >
                       {" "}
                       Yes
                     </button>
                     <button
-                      onClick={() =>
-                      {
+                      onClick={() => {
                         socket.emit("vote-receive", {
                           playerId: userId,
                           vote: false,
                           roomId,
-                        })
-                        setVoted(true)
-                      }
-                      }
+                        });
+                        setVoted(true);
+                      }}
                     >
                       {" "}
                       No
@@ -412,7 +549,7 @@ const page: FC<pageProps> = ({}) => {
         // not even joined at this point
         <div className="w-screen h-screen gap-10  flex justify-between flex-col items-center">
           <div>
-            <div className="pt-12 text-3xl  border-2">Co-Paint</div>
+            <div className="pt-12 text-3xl text-black border-2">Tag Team</div>
           </div>
           <div className="flex flex-col gap-8">
             <input

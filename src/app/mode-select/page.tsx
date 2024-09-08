@@ -8,6 +8,7 @@ import { Caveat, Pangolin } from "next/font/google";
 import Image from "next/image";
 import Column from "@/components/Column";
 
+
 const pangolin = Pangolin({
   subsets: ["latin"],
   weight: ["400", "400"],
@@ -36,6 +37,9 @@ enum Tool {
 }
 
 const page: FC<pageProps> = ({}) => {
+  
+
+
   return (
     <main className="flex items-center justify-center min-h-screen ">
       <Image
@@ -43,10 +47,11 @@ const page: FC<pageProps> = ({}) => {
         layout="fill"
         objectFit="cover"
         quality={100}
-        className=" bg-cover contrast-125 brightness-[0.87] blur-[7px] "
+        className=" bg-cover -z-10 contrast-125 brightness-[0.87] blur-[7px] "
         alt="Crypto Roulette rules background"
       />
-      <Navbar />
+            <Navbar />
+
       <div className="flex-grow flex items-center justify-center z-10">
         <div className="flex w-full justify-center">
           <a href="/co-paint">
