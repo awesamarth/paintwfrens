@@ -15,7 +15,6 @@ export const useDraw = ({
   currentTool: Tool;
   color: string;
 }) => {
-
   const [mouseDown, setMouseDown] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -42,7 +41,7 @@ export const useDraw = ({
     if (!ctx) return;
 
     if (currentTool === Tool.FillBucket) {
-        console.log(ctx, currentPoint)
+      console.log(ctx, currentPoint);
       floodFill(ctx, currentPoint.x, currentPoint.y, color);
       // You might want to emit this event from your page component instead
       // socket.emit('fill-bucket', { x: currentPoint.x, y: currentPoint.y, color });
@@ -60,7 +59,11 @@ export const useDraw = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Set the fill color to white
+    ctx.fillStyle = "white";
+
+    // Fill the entire canvas with white
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   };
 
   useEffect(() => {

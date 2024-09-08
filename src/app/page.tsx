@@ -51,7 +51,6 @@ const page: FC<pageProps> = ({}) => {
         className=" bg-cover contrast-125 brightness-[0.87] blur-[7px] "
         alt="Crypto Roulette rules background"
       />
-      <Navbar />
 
       <div className="text-center z-10 w-full h-screen flex flex-col justify-center items-center   ">
         <div className=" bg-blue-100 w-[35rem] rounded-3xl p-10 drop-shadow-xl shadow-xl border-blue-400 border ">

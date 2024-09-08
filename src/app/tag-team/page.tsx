@@ -407,7 +407,7 @@ const page: FC<pageProps> = ({}) => {
 
       {roomJoined ? (
         roomData.gameStatus === "waiting" ? (
-          <div className="border-2 h-screen w-full justify-center items-center flex flex-col">
+          <div className="text-black h-screen w-full justify-center items-center flex flex-col">
             <div>
               You will get 90 seconds to paint the canvas with a friend. Mint
               your collective as an NFT.
@@ -418,7 +418,7 @@ const page: FC<pageProps> = ({}) => {
             </div>
           </div>
         ) : roomData.gameStatus === "counting-down" ? (
-          <div className="border-2 h-screen w-full justify-center items-center flex flex-col">
+          <div className="text-black h-screen w-full justify-center items-center flex flex-col">
             <div>
               You will get 90 seconds to paint the canvas with a friend. Mint
               your collective as an NFT.
@@ -437,45 +437,38 @@ const page: FC<pageProps> = ({}) => {
               className="border z-30 border-black  rounded-md"
               style={{ cursor }}
             />
-            {roomData.gameStatus !== "waiting" && (
-              <div className="flex flex-col gap-10 pr-10">
-                <HexColorPicker color={color} onChange={setColor} />
-                <button
-                  type="button"
-                  className="p-2 rounded-md border border-white"
-                >
-                  Clear canvas
-                </button>
-                <button
-                  type="button"
-                  className={`p-2 rounded-md border border-white`}
-                  onClick={toggleEraseMode}
-                >
-                  {eraseMode ? "erasing" : "erase"}
-                </button>
-                <input
-                  type="range"
-                  min="1"
-                  max="50"
-                  value={lineWidth}
-                  onChange={(e) => setlineWidth(Number(e.target.value))}
-                  className="slider"
-                />
-                <span>{lineWidth}</span>
-                <button onClick={() => setCurrentTool(Tool.Brush)}>
-                  Brush
-                </button>
-                <button onClick={() => setCurrentTool(Tool.Eraser)}>
-                  Eraser
-                </button>
-                <button onClick={() => setCurrentTool(Tool.FillBucket)}>
-                  Fill Bucket
-                </button>
-              </div>
-            )}
+                      {roomData.gameStatus !== "waiting" && (
+            <div className="flex flex-col gap-10 pr-10">
+              <HexColorPicker color={color} onChange={setColor} />
+              <button
+                type="button"
+                className="p-2 bg-white text-black rounded-md border border-white"
+                onClick={() => socket.emit("clear")}
+              >
+                Clear canvas
+              </button>
+              <button
+                type="button"
+                className={`${eraseMode?"bg-black text-white":"bg-white text-black"} p-2 rounded-md border border-white`}
+                onClick={toggleEraseMode}
+              >
+                {eraseMode ? "erasing" : "erase"}
+              </button>
+              <input
+                type="range"
+                min="1"
+                max="50"
+                value={lineWidth}
+                onChange={(e) => setlineWidth(Number(e.target.value))}
+                className="slider"
+              />
+              <span>{lineWidth}</span>
+                
+            </div>
+          )}
           </div>
         ) : roomData.gameStatus === "ended" ? (
-          <div className="border-2 h-screen w-full justify-center items-center flex flex-col">
+          <div className="text-black h-screen w-full justify-center items-center flex flex-col">
             <div></div>
             <div className="text-3xl">Game ended</div>
             <img
@@ -549,7 +542,7 @@ const page: FC<pageProps> = ({}) => {
         // not even joined at this point
         <div className="w-screen h-screen gap-10  flex justify-between flex-col items-center">
           <div>
-            <div className="pt-12 text-3xl text-black border-2">Tag Team</div>
+            <div className="pt-12 text-3xl text-black ">Tag Team</div>
           </div>
           <div className="flex flex-col gap-8">
             <input
@@ -562,7 +555,7 @@ const page: FC<pageProps> = ({}) => {
               onChange={(e) => setRoomId(e.target.value)}
               className="text-black"
             />
-            <button onClick={joinRoom}>Join room</button>
+          <button className="text-black" onClick={joinRoom}>Join room</button>
           </div>
           <div></div>
         </div>

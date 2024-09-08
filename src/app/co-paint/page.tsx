@@ -199,7 +199,7 @@ const page: FC<pageProps> = ({}) => {
     
       {roomJoined ? (
         roomData.gameStatus==="waiting"?
-        (<div className="border-2 h-screen w-full justify-center items-center flex flex-col">
+        (<div className=" text-black h-screen w-full justify-center items-center flex flex-col">
 
           <div>You will get 90 seconds to paint the canvas with a friend. Mint your collective as an NFT.</div>
           <div>Waiting for {NUM_PLAYERS-roomData.playersArray.length} player{NUM_PLAYERS-roomData.playersArray.length>1?"s":""}</div>
@@ -208,7 +208,7 @@ const page: FC<pageProps> = ({}) => {
         
         :
         roomData.gameStatus==="counting-down"?
-        (<div className="border-2 h-screen w-full justify-center items-center flex flex-col">
+        (<div className="text-black h-screen w-full justify-center items-center flex flex-col">
 
           <div>You will get 90 seconds to paint the canvas with a friend. Mint your collective as an NFT.</div>
           <div className="text-3xl">{startingCounter}</div>
@@ -234,14 +234,14 @@ const page: FC<pageProps> = ({}) => {
               <HexColorPicker color={color} onChange={setColor} />
               <button
                 type="button"
-                className="p-2 rounded-md border border-white"
+                className="p-2 bg-white text-black rounded-md border border-white"
                 onClick={() => socket.emit("clear")}
               >
                 Clear canvas
               </button>
               <button
                 type="button"
-                className={`p-2 rounded-md border border-white`}
+                className={`${eraseMode?"bg-black text-white":"bg-white text-black"} p-2 rounded-md border border-white`}
                 onClick={toggleEraseMode}
               >
                 {eraseMode ? "erasing" : "erase"}
@@ -255,19 +255,15 @@ const page: FC<pageProps> = ({}) => {
                 className="slider"
               />
               <span>{lineWidth}</span>
-              <button onClick={() => setCurrentTool(Tool.Brush)}>Brush</button>
-              <button onClick={() => setCurrentTool(Tool.Eraser)}>Eraser</button>
-              <button onClick={() => setCurrentTool(Tool.FillBucket)}>
-                Fill Bucket
-              </button>
+                
             </div>
           )}
         </div>):roomData.gameStatus==="ended"?
-                (<div className="border-2 h-screen w-full justify-center items-center flex flex-col">
+                (<div className="text-black h-screen w-full justify-center items-center flex flex-col">
 
                   <div></div>
                   <div className="text-3xl">Game ended</div>
-                  <img src={imagePreviewUrl} />
+                  <img className="w-[40rem] h-[40rem]" src={imagePreviewUrl} />
                   
 
 
@@ -278,12 +274,12 @@ const page: FC<pageProps> = ({}) => {
         // not even joined at this point
         <div className="w-screen h-screen gap-10  flex justify-between flex-col items-center">
           <div>
-            <div className="pt-12 text-3xl  border-2">Co-Paint</div>
+            <div className="pt-12 text-3xl text-black">Co-Paint</div>
             </div> 
           <div className="flex flex-col gap-8">
           <input value={userId} onChange={(e) => setUserId(e.target.value)} className="text-black" />
           <input value={roomId} onChange={(e) => setRoomId(e.target.value)} className="text-black" />
-          <button onClick={joinRoom}>Join room</button>
+          <button className="text-black" onClick={joinRoom}>Join room</button>
         
           </div>
           <div></div>
