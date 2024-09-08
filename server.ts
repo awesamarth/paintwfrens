@@ -666,6 +666,7 @@ app.prepare().then(() => {
         console.log("all players have left the room");
         delete allRoomsMap[socket.data.roomId];
       }
+      socket.removeAllListeners()
     });
   });
 
