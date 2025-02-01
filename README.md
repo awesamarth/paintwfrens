@@ -1,3 +1,7 @@
+## Video Demo
+[![YouTube](http://i.ytimg.com/vi/gss28iLWN3A/hqdefault.jpg)](https://www.youtube.com/watch?v=gss28iLWN3A)
+
+## How to run
 I was hitting RAM limits for Render.com as I am on their free plan so I couldn't deploy it. To run it locally, just:
 
 ```git clone```
@@ -6,7 +10,7 @@ I was hitting RAM limits for Render.com as I am on their free plan so I couldn't
 
 ```npm install```
 
-You can then directly all three modes. Just run
+You can then directly access all three modes. Just run
 
 ```npm run dev```
 
